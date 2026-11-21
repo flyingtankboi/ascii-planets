@@ -22,6 +22,13 @@ impl Default for Pose {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+/// A simple sphere geometry
+pub struct Sphere {
+    /// Radius of the sphere
+    radius : u32,
+}
+
 
 #[cfg(test)]
 mod tests {

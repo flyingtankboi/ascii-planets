@@ -1,10 +1,11 @@
-
+//! Camera module handling the camera object in a scene
 use crate::structures::Pose;
 
 /// Represents a camera type
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CameraType {
-
+    /// Standard camera model
+    PinHole,
 }
 
 
@@ -15,5 +16,5 @@ pub struct Camera {
     pub pose : Pose,
     /// The camera type
     /// see [`CameraType`]
-    pub light_type : CameraType,
+    pub camera_type : CameraType,
 }

@@ -1,3 +1,4 @@
+//! Light module handling the light object in a scene
 use crate::structures::Pose;
 
 /// Represents a light type
