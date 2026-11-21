@@ -22,13 +22,34 @@ impl Default for Pose {
     }
 }
 
+/// A general trait to give to all objects with a pose field.
+/// Enables handling the calculations for position and rotation easily.
+pub trait HasPose {
+    fn pose(&self) -> &Pose;
+
+    fn distance(&self, other: &impl HasPose) -> f32 {
+        self.pose().position.distance(other.pose().position)
+    }
+
+    fn up(&self) -> Vec3 {
+        self.pose().orientation * Vec3::Y
+    }
+
+    fn right(&self) -> Vec3 {
+        self.pose().orientation * Vec3::X
+    }
+
+    fn forward(&self) -> Vec3 {
+        self.pose().orientation * Vec3::Z
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 /// A simple sphere geometry
 pub struct Sphere {
     /// Radius of the sphere
-    radius : u32,
+    pub radius: u32,
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -1,13 +1,17 @@
-use crate::structures::{Pose, Sphere};
-
-
+use crate::geometry::{HasPose, Pose, Sphere};
 
 // Represents the planets in the scene
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Planet{
+pub struct Planet {
     /// Position in 3D space (x, y, z).
     /// see [`Vec3`]
-    pose : Pose,
+    pose: Pose,
     // The simple geometric form used
-    pub geometry : Sphere,
+    pub geometry: Sphere,
+}
+
+impl HasPose for Planet {
+    fn pose(&self) -> &Pose {
+        &self.pose
+    }
 }

@@ -8,7 +8,6 @@ use ratatui::{DefaultTerminal, Frame};
 /// General Result handler.
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-
 /// Main call to run the ratatui app.
 fn main() -> Result<()> {
     ratatui::run(run)
