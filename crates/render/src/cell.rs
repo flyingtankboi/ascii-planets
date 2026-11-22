@@ -1,12 +1,10 @@
-
 /// Color struct in RGB
 #[derive(Debug, Clone, Copy)]
 pub struct Color(pub u8, pub u8, pub u8);
 
 impl Color {
-
     /// Transforms the rgb color to hsv
-    pub fn to_hsv(&self) -> (f32, f32, f32){
+    pub fn hsv(&self) -> (f32, f32, f32) {
         let r = self.0 as f32 / 255.0;
         let g = self.1 as f32 / 255.0;
         let b = self.2 as f32 / 255.0;
@@ -32,23 +30,23 @@ impl Color {
     }
 }
 
-/// Cell structure acts like a pixel for ASCII 
+/// Cell structure acts like a pixel for ASCII
 #[derive(Debug, Clone, Copy)]
 pub struct Cell {
     /// Symbol is the ASCII character to show, NONE to show nothing
-    pub symbol : Option<char>,
+    pub symbol: Option<char>,
     /// Foregroud color
-    pub fg : Color,
+    pub fg: Color,
     /// Background color, NONE for "transparent"
-    pub bg : Option<Color>,
+    pub bg: Option<Color>,
 }
 
 impl Default for Cell {
     fn default() -> Self {
         Cell {
-            symbol : None,
-            fg : Color(u8::MAX,u8::MAX,u8::MAX),
-            bg : None
+            symbol: None,
+            fg: Color(u8::MAX, u8::MAX, u8::MAX),
+            bg: None,
         }
     }
 }

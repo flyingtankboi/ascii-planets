@@ -9,7 +9,9 @@ pub enum LightType {
     /// Light at a physical point.
     PointLight,
     /// Light at a physical point with an emitting cone defined by an angle.
-    SpotLight { angle: u32 },
+    SpotLight { angle: f32 },
+    /// Ambient light coming from everywhere
+    AmbientLight,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

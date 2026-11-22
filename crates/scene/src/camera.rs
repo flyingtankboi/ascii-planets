@@ -5,9 +5,9 @@ use crate::geometry::{HasPose, Pose};
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CameraType {
     /// Standard rays come from one point
-    Perspective { fov: f32 },
+    Perspective { fov_radian: f32 },
     /// Rays all come out parallel
-    Orthogonal { ortho_height: f32},
+    Orthogonal { ortho_height: f32 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

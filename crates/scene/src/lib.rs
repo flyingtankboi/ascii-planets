@@ -12,9 +12,9 @@ pub mod planet;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Scene {
     /// Vec of [`Planet`]
-    planets: Vec<Planet>,
+    pub planets: Vec<Planet>,
     /// Vec of [`Light`]
-    lights: Vec<Light>,
+    pub lights: Vec<Light>,
     /// Singular [`Camera`] per scene
-    camera: Camera,
+    pub camera: Camera,
 }

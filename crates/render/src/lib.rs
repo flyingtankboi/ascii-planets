@@ -1,4 +1,5 @@
 pub mod canvas;
-pub mod cell;
+mod cell;
+pub mod intersect;
+mod ray;
 pub mod settings;
-pub mod ray;
