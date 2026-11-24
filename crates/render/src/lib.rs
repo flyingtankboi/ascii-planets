@@ -1,5 +1,6 @@
 pub mod canvas;
-mod cell;
-pub mod intersect;
-mod ray;
 pub mod settings;
+
+pub(crate) mod grid;
+pub(crate) mod stages;
+pub(crate) mod trace;

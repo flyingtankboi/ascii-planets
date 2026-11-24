@@ -1,4 +1,4 @@
-use crate::ray::Ray;
+use crate::trace::ray::Ray;
 
 use glam::Vec3;
 use scene::{geometry::HasPose, planet::Planet};
@@ -16,7 +16,8 @@ pub struct Hit<'a> {
     pub planet: &'a Planet,
 }
 
-fn intersect_with_one(ray: Ray, planet: &Planet, t_min: f32, t_max: f32) -> Option<Vec3> {
+/// Gives the hit between one ray and one planet, returns None if no hits are found
+fn intersect_with_one(ray: &Ray, planet: &Planet, t_min: f32, t_max: f32) -> Option<Vec3> {
     let l = ray.origin - planet.position();
 
     // Using half_b simplifies the quadratic formula by eliminating factors of 2 and 4
@@ -44,7 +45,8 @@ fn intersect_with_one(ray: Ray, planet: &Planet, t_min: f32, t_max: f32) -> Opti
     Some(point)
 }
 
-pub fn intersect<'a>(ray: Ray, planets: &'a [Planet]) -> Option<Hit<'a>> {
+/// Gives the hit for a given list of planets, returns None if no hits are found
+pub(crate) fn intersect_planets<'a>(ray: &Ray, planets: &'a [Planet]) -> Option<Hit<'a>> {
     planets
         .iter()
         .filter_map(|planet| {
@@ -52,7 +54,7 @@ pub fn intersect<'a>(ray: Ray, planets: &'a [Planet]) -> Option<Hit<'a>> {
             Some(Hit {
                 distance: point.distance(ray.origin),
                 point,
-                normal: (point - planet.position()) * (1.0 / planet.radius()),
+                normal: (point - planet.position()).normalize(),
                 planet,
             })
         })
@@ -80,8 +82,8 @@ mod tests {
         let planet = Planet::from_geometry(Vec3::new(10.0, 0.0, 5.0), 1.0);
         let planets = [planet];
 
-        assert!(intersect_with_one(ray, &planets[0], 0.001, f32::MAX).is_none());
-        assert!(intersect(ray, &planets).is_none());
+        assert!(intersect_with_one(&ray, &planets[0], 0.001, f32::MAX).is_none());
+        assert!(intersect_planets(&ray, &planets).is_none());
     }
 
     #[test]
@@ -90,7 +92,7 @@ mod tests {
         let ray = Ray::new(Vec3::ZERO, Vec3::Z);
         let planets = [Planet::from_geometry(Vec3::new(0.0, 0.0, 5.0), 1.0)];
 
-        let hit = intersect(ray, &planets).expect("expected a hit");
+        let hit = intersect_planets(&ray, &planets).expect("expected a hit");
 
         assert!((hit.distance - 4.0).abs() < EPSILON);
         assert_vec3_approx_eq(hit.point, Vec3::new(0.0, 0.0, 4.0));
@@ -104,7 +106,7 @@ mod tests {
         let ray = Ray::new(Vec3::ZERO, Vec3::Z);
         let planets = [Planet::from_geometry(Vec3::ZERO, 2.0)];
 
-        let hit = intersect(ray, &planets).expect("expected exit hit");
+        let hit = intersect_planets(&ray, &planets).expect("expected exit hit");
 
         assert!((hit.distance - 2.0).abs() < EPSILON);
         assert_vec3_approx_eq(hit.point, Vec3::new(0.0, 0.0, 2.0));
@@ -117,7 +119,7 @@ mod tests {
         let ray = Ray::new(Vec3::ZERO, Vec3::Z);
         let planets = [Planet::from_geometry(Vec3::new(0.0, 0.0, -5.0), 1.0)];
 
-        assert!(intersect(ray, &planets).is_none());
+        assert!(intersect_planets(&ray, &planets).is_none());
     }
 
     #[test]
@@ -126,11 +128,11 @@ mod tests {
         let planet = Planet::from_geometry(Vec3::new(0.0, 0.0, 5.0), 1.0);
 
         // Hit is at t = 4.0 and t = 6.0; restricting t_max to 3.0 should miss
-        assert!(intersect_with_one(ray, &planet, 0.001, 3.0).is_none());
+        assert!(intersect_with_one(&ray, &planet, 0.001, 3.0).is_none());
 
         // Setting t_min = 4.5 skips the front hit (4.0) and hits the back surface (6.0)
         let back_hit =
-            intersect_with_one(ray, &planet, 4.5, f32::MAX).expect("expected back-face hit");
+            intersect_with_one(&ray, &planet, 4.5, f32::MAX).expect("expected back-face hit");
         assert_vec3_approx_eq(back_hit, Vec3::new(0.0, 0.0, 6.0));
     }
 
@@ -144,7 +146,7 @@ mod tests {
         let far_planet = Planet::from_geometry(Vec3::new(0.0, 0.0, 10.0), 0.5);
 
         let planets = [far_planet, near_planet];
-        let hit = intersect(ray, &planets).expect("expected closest planet hit");
+        let hit = intersect_planets(&ray, &planets).expect("expected closest planet hit");
 
         assert!((hit.distance - 3.0).abs() < EPSILON);
         assert_vec3_approx_eq(hit.point, Vec3::new(0.0, 0.0, 3.0));
@@ -153,7 +155,7 @@ mod tests {
     #[test]
     fn test_empty_planet_slice() {
         let ray = Ray::new(Vec3::ZERO, Vec3::Z);
-        assert!(intersect(ray, &[]).is_none());
+        assert!(intersect_planets(&ray, &[]).is_none());
     }
 
     #[test]
@@ -162,7 +164,7 @@ mod tests {
         let ray = Ray::new(Vec3::ZERO, Vec3::new(0.0, 0.0, 2.0));
         let planets = [Planet::from_geometry(Vec3::new(0.0, 0.0, 5.0), 1.0)];
 
-        let hit = intersect(ray, &planets).expect("expected hit");
+        let hit = intersect_planets(&ray, &planets).expect("expected hit");
 
         assert!((hit.distance - 4.0).abs() < EPSILON);
         assert_vec3_approx_eq(hit.point, Vec3::new(0.0, 0.0, 4.0));

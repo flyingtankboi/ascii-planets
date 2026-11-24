@@ -1,5 +1,6 @@
 //! Light module handling the light object in a scene
 use crate::geometry::{HasPose, Pose};
+use glam::Vec3;
 
 /// Represents a light type
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -22,6 +23,8 @@ pub struct Light {
     /// The light type
     /// see [`LightType`]
     pub light_type: LightType,
+    /// Light intensity for Red Green Blue i.e an unbounded energy value
+    pub color: Vec3,
 }
 
 impl HasPose for Light {

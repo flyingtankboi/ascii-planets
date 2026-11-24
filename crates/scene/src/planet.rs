@@ -29,4 +29,9 @@ impl Planet {
     pub fn radius(&self) -> f32 {
         self.geometry.radius
     }
+
+    /// Gives the albedo of a point (projected to the sphere) of the planet
+    pub fn albedo(&self, point: Vec3) -> Vec3 {
+        Vec3::new(1., 1., 1.)
+    }
 }
