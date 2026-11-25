@@ -20,7 +20,7 @@ pub enum Operator {
 
 impl Operator {
     /// Evaluate the correct operator function depending on enum value
-    pub fn eval(&self, x: f32) -> f32 {
+    pub(crate) fn eval(&self, x: f32) -> f32 {
         match *self {
             Operator::Clamp { clamp } => clamping(x, clamp),
             Operator::Reinhard => reinhard(x),
@@ -39,7 +39,7 @@ pub enum ApplyTo {
 
 impl ApplyTo {
     /// Apply the bounding operator depending on the strategy
-    pub fn apply(&self, color: Vec3, op: &Operator) -> Vec3 {
+    pub(crate) fn apply(&self, color: Vec3, op: &Operator) -> Vec3 {
         match *self {
             ApplyTo::PerChannel => Vec3::new(op.eval(color.x), op.eval(color.y), op.eval(color.z)),
             ApplyTo::Luminance => {
@@ -73,7 +73,7 @@ pub(crate) struct ToneFragment {
     pub color: Vec3,
 }
 
-pub fn tonemap(shade_grid: Grid<ShadeFragment>, settings: ToneMapSettings) -> Grid<ToneFragment> {
+pub(crate) fn tonemap(shade_grid: Grid<ShadeFragment>, settings: ToneMapSettings) -> Grid<ToneFragment> {
     shade_grid.map(|shade| {
         let mut color = if shade.hit { shade.color } else { Vec3::ZERO };
         // Exposure

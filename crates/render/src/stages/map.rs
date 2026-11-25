@@ -30,13 +30,13 @@ pub struct MapSettings {
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub(crate) struct Target {
     /// fg_color sRGB in [0,1]
-    pub fg_color: Vec3,
+    pub(crate) fg_color: Vec3,
     /// Brightness value in [0,1]
-    pub brightness : f32,
+    pub(crate) brightness : f32,
 }
 
 /// Maps the tonemap RGB bounded colors to a fg_color and a perceived brightness to achieve
-pub fn map_color(tonemap_grid: Grid<ToneFragment>, settings: MapSettings) -> Grid<Target> {
+pub(crate) fn map_color(tonemap_grid: Grid<ToneFragment>, settings: MapSettings) -> Grid<Target> {
     tonemap_grid.map(|shade| {
 
         let luminance = shade.color.dot(Vec3::new(0.2126, 0.7152, 0.0722));

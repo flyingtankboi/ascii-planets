@@ -5,15 +5,15 @@ use scene::{geometry::HasPose, planet::Planet};
 
 /// Represents a hit between a planet and a ray
 #[derive(Debug, Clone)]
-pub struct Hit<'a> {
+pub(crate) struct Hit<'a> {
     /// Distance between hit point and ray origin
-    pub distance: f32,
+    pub(crate) distance: f32,
     /// Hit point position
-    pub point: Vec3,
+    pub(crate) point: Vec3,
     /// Normal of the surface at hit point
-    pub normal: Vec3,
+    pub(crate) normal: Vec3,
     /// Which planet was hit
-    pub planet: &'a Planet,
+    pub(crate) planet: &'a Planet,
 }
 
 /// Gives the hit between one ray and one planet, returns None if no hits are found
