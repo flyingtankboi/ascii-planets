@@ -3,8 +3,8 @@
 
 use glam::Vec3;
 
-use crate::stages::shading::ShadeFragment;
 use crate::grid::Grid;
+use crate::stages::shading::ShadeFragment;
 
 /// The different bounding operators to get to [0,1]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -73,7 +73,10 @@ pub(crate) struct ToneFragment {
     pub color: Vec3,
 }
 
-pub(crate) fn tonemap(shade_grid: Grid<ShadeFragment>, settings: ToneMapSettings) -> Grid<ToneFragment> {
+pub(crate) fn tonemap(
+    shade_grid: Grid<ShadeFragment>,
+    settings: ToneMapSettings,
+) -> Grid<ToneFragment> {
     shade_grid.map(|shade| {
         let mut color = if shade.hit { shade.color } else { Vec3::ZERO };
         // Exposure
