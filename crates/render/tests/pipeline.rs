@@ -78,7 +78,7 @@ fn test_empty_scene_is_dark() {
         lights: vec![],
         camera: camera(Quat::IDENTITY),
     };
-    let canvas = render(scene, settings(), WIDTH, HEIGHT);
+    let canvas = render(&scene, &settings(), WIDTH, HEIGHT);
 
     assert_eq!((canvas.width(), canvas.height()), (WIDTH, HEIGHT));
     assert_eq!(lit_cells(&canvas), 0);
@@ -86,7 +86,7 @@ fn test_empty_scene_is_dark() {
 
 #[test]
 fn test_planet_lit_in_center_only() {
-    let canvas = render(lit_scene(1.), settings(), WIDTH, HEIGHT);
+    let canvas = render(&lit_scene(1.), &settings(), WIDTH, HEIGHT);
 
     assert!(glyph_level(&canvas, WIDTH / 2, HEIGHT / 2) > 0);
     assert_eq!(glyph_level(&canvas, 0, 0), 0);
@@ -97,15 +97,15 @@ fn test_planet_lit_in_center_only() {
 fn test_camera_facing_away_is_dark() {
     let mut scene = lit_scene(1.);
     scene.camera = camera(Quat::from_rotation_y(PI));
-    let canvas = render(scene, settings(), WIDTH, HEIGHT);
+    let canvas = render(&scene, &settings(), WIDTH, HEIGHT);
 
     assert_eq!(lit_cells(&canvas), 0);
 }
 
 #[test]
 fn test_bigger_planet_covers_more_cells() {
-    let small = render(lit_scene(1.), settings(), WIDTH, HEIGHT);
-    let big = render(lit_scene(2.), settings(), WIDTH, HEIGHT);
+    let small = render(&lit_scene(1.), &settings(), WIDTH, HEIGHT);
+    let big = render(&lit_scene(2.), &settings(), WIDTH, HEIGHT);
 
     assert!(lit_cells(&big) > lit_cells(&small));
 }
@@ -118,7 +118,7 @@ fn test_side_light_brightens_one_side() {
         LightType::DirectionalLight,
         Quat::from_rotation_y(FRAC_PI_2),
     )];
-    let canvas = render(scene, settings(), WIDTH, HEIGHT);
+    let canvas = render(&scene, &settings(), WIDTH, HEIGHT);
 
     let (x, y) = (WIDTH / 2, HEIGHT / 2);
     assert!(glyph_level(&canvas, x - 2, y) > glyph_level(&canvas, x + 2, y));
@@ -130,7 +130,7 @@ fn test_mono_color_mode() {
     settings.map_settings.color_mode = ColorMode::Mono {
         color: Vec3::new(1., 0., 0.),
     };
-    let canvas = render(lit_scene(1.), settings, WIDTH, HEIGHT);
+    let canvas = render(&lit_scene(1.), &settings, WIDTH, HEIGHT);
 
     let fg = canvas[(WIDTH / 2, HEIGHT / 2)].fg;
     assert_eq!((fg.0, fg.1, fg.2), (255, 0, 0));
@@ -141,13 +141,13 @@ fn test_overexposure_does_not_panic() {
     let mut settings = settings();
     settings.tone_settings.exposure_stops = 10.;
     settings.tone_settings.operator = Operator::Clamp { clamp: 1. };
-    let canvas = render(lit_scene(1.), settings, WIDTH, HEIGHT);
+    let canvas = render(&lit_scene(1.), &settings, WIDTH, HEIGHT);
 
     assert_eq!(canvas[(WIDTH / 2, HEIGHT / 2)].symbol, Some('@'));
 }
 
 #[test]
 fn test_tiny_canvas_sizes() {
-    assert_eq!(render(lit_scene(1.), settings(), 0, 0).cells.len(), 0);
-    assert_eq!(render(lit_scene(1.), settings(), 1, 1).cells.len(), 1);
+    assert_eq!(render(&lit_scene(1.), &settings(), 0, 0).cells.len(), 0);
+    assert_eq!(render(&lit_scene(1.), &settings(), 1, 1).cells.len(), 1);
 }

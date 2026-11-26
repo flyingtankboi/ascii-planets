@@ -75,7 +75,7 @@ pub(crate) struct ToneFragment {
 
 pub(crate) fn tonemap(
     shade_grid: Grid<ShadeFragment>,
-    settings: ToneMapSettings,
+    settings: &ToneMapSettings,
 ) -> Grid<ToneFragment> {
     shade_grid.map(|shade| {
         let mut color = if shade.hit { shade.color } else { Vec3::ZERO };
@@ -130,7 +130,7 @@ mod tests {
 
     fn tonemap_one(color: Vec3, hit: bool, settings: ToneMapSettings) -> Vec3 {
         let grid = Grid::new(1, 1, ShadeFragment { hit, color });
-        tonemap(grid, settings)[(0, 0)].color
+        tonemap(grid, &settings)[(0, 0)].color
     }
 
     #[test]

@@ -43,7 +43,7 @@ pub struct QuantizeSettings {
 }
 
 /// Quantizes the target
-pub(crate) fn quantize(target: Grid<Target>, settings: QuantizeSettings) -> Canvas {
+pub(crate) fn quantize(target: Grid<Target>, settings: &QuantizeSettings) -> Canvas {
     target.map(|target| {
         let n = settings.glyph_ramp.len() as f32;
         let brightness_index = (target.brightness * n).floor().clamp(0., n - 1.) as usize;
@@ -80,7 +80,7 @@ mod tests {
                 ramp: ramp.to_vec(),
             },
         };
-        quantize(Grid::new(1, 1, target), settings)[(0, 0)]
+        quantize(Grid::new(1, 1, target), &settings)[(0, 0)]
     }
 
     #[test]

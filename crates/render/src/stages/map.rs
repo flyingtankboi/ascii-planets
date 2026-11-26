@@ -36,7 +36,7 @@ pub(crate) struct Target {
 }
 
 /// Maps the tonemap RGB bounded colors to a fg_color and a perceived brightness to achieve
-pub(crate) fn map_color(tonemap_grid: Grid<ToneFragment>, settings: MapSettings) -> Grid<Target> {
+pub(crate) fn map_color(tonemap_grid: Grid<ToneFragment>, settings: &MapSettings) -> Grid<Target> {
     tonemap_grid.map(|shade| {
         let luminance = shade.color.dot(Vec3::new(0.2126, 0.7152, 0.0722));
         let perceived_brightness = to_srgb(luminance);
@@ -85,7 +85,7 @@ mod tests {
 
     fn map_one(color: Vec3, color_mode: ColorMode) -> Target {
         let grid = Grid::new(1, 1, ToneFragment { color });
-        map_color(grid, MapSettings { color_mode })[(0, 0)]
+        map_color(grid, &MapSettings { color_mode })[(0, 0)]
     }
 
     #[test]

@@ -27,10 +27,21 @@ pub enum DiffuseModel {
 }
 
 /// Settings for the shading stage.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ShadeSettings {
     /// Diffuse lighting model used for directional lights.
     pub diffuse: DiffuseModel,
+    /// Height / width ratio of one cell, terminal cells are usually around 2:1
+    pub cell_aspect: f32,
+}
+
+impl Default for ShadeSettings {
+    fn default() -> Self {
+        ShadeSettings {
+            diffuse: DiffuseModel::default(),
+            cell_aspect: 2.,
+        }
+    }
 }
 
 /// Output of the shading stage for one cell.
@@ -49,7 +60,7 @@ pub(crate) fn shade(
     height: usize,
     settings: &ShadeSettings,
 ) -> Grid<ShadeFragment> {
-    Ray::from_camera(&scene.camera, width, height).map(|ray| {
+    Ray::from_camera(&scene.camera, width, height, settings.cell_aspect).map(|ray| {
         match intersect_planets(ray, &scene.planets) {
             Some(hit) => ShadeFragment {
                 hit: true,
