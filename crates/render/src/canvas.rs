@@ -56,3 +56,36 @@ impl Default for Cell {
 /// Represents the canvas where everything is rendered
 /// It keeps a vector of all the cells, and the settings of the render
 pub type Canvas = Grid<Cell>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const EPSILON: f32 = 1e-4;
+
+    fn assert_hsv_approx_eq(actual: (f32, f32, f32), expected: (f32, f32, f32)) {
+        assert!(
+            (actual.0 - expected.0).abs() < EPSILON
+                && (actual.1 - expected.1).abs() < EPSILON
+                && (actual.2 - expected.2).abs() < EPSILON,
+            "expected {:?}, got {:?}",
+            expected,
+            actual
+        );
+    }
+
+    #[test]
+    fn test_hsv_greyscale() {
+        assert_hsv_approx_eq(Color(0, 0, 0).hsv(), (0., 0., 0.));
+        assert_hsv_approx_eq(Color(255, 255, 255).hsv(), (0., 0., 1.));
+    }
+
+    #[test]
+    fn test_hsv_hues() {
+        assert_hsv_approx_eq(Color(255, 0, 0).hsv(), (0., 1., 1.));
+        assert_hsv_approx_eq(Color(0, 255, 0).hsv(), (120., 1., 1.));
+        assert_hsv_approx_eq(Color(0, 0, 255).hsv(), (240., 1., 1.));
+        // Magenta checks the negative hue wrap
+        assert_hsv_approx_eq(Color(255, 0, 255).hsv(), (300., 1., 1.));
+    }
+}

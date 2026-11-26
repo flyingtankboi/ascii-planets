@@ -112,3 +112,85 @@ fn reinhard_extended(value: f32, white_luminance: f32) -> f32 {
         value * (1. + value / (white_luminance.powf(2.))) / (value + 1.)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const EPSILON: f32 = 1e-5;
+
+    fn assert_vec3_approx_eq(actual: Vec3, expected: Vec3) {
+        assert!(
+            (actual - expected).length() < EPSILON,
+            "expected {:?}, got {:?}",
+            expected,
+            actual
+        );
+    }
+
+    fn tonemap_one(color: Vec3, hit: bool, settings: ToneMapSettings) -> Vec3 {
+        let grid = Grid::new(1, 1, ShadeFragment { hit, color });
+        tonemap(grid, settings)[(0, 0)].color
+    }
+
+    #[test]
+    fn test_clamping() {
+        assert_eq!(clamping(5., 0.), 0.);
+        assert_eq!(clamping(1., 2.), 0.5);
+        assert_eq!(clamping(5., 2.), 1.);
+    }
+
+    #[test]
+    fn test_reinhard() {
+        assert_eq!(reinhard(0.), 0.);
+        assert_eq!(reinhard(1.), 0.5);
+        // The white luminance maps exactly to 1
+        assert!((reinhard_extended(4., 4.) - 1.).abs() < EPSILON);
+        assert_eq!(reinhard_extended(4., 0.), 0.);
+    }
+
+    #[test]
+    fn test_luminance_keeps_channel_ratios() {
+        let color = Vec3::new(2., 1., 0.5);
+        let mapped = ApplyTo::Luminance.apply(color, &Operator::Reinhard);
+        assert_vec3_approx_eq(mapped / mapped.x, color / color.x);
+        assert_eq!(
+            ApplyTo::Luminance.apply(Vec3::ZERO, &Operator::Reinhard),
+            Vec3::ZERO
+        );
+    }
+
+    #[test]
+    fn test_per_channel() {
+        let mapped = ApplyTo::PerChannel.apply(Vec3::new(0., 1., 3.), &Operator::Reinhard);
+        assert_vec3_approx_eq(mapped, Vec3::new(0., 0.5, 0.75));
+    }
+
+    #[test]
+    fn test_miss_is_black() {
+        let color = tonemap_one(Vec3::ONE, false, ToneMapSettings::default());
+        assert_eq!(color, Vec3::ZERO);
+    }
+
+    #[test]
+    fn test_exposure_doubles_per_stop() {
+        let settings = ToneMapSettings {
+            exposure_stops: 1.,
+            operator: Operator::Clamp { clamp: 10. },
+            apply_to: ApplyTo::PerChannel,
+        };
+        let color = tonemap_one(Vec3::splat(1.), true, settings);
+        assert_vec3_approx_eq(color, Vec3::splat(0.2));
+    }
+
+    #[test]
+    fn test_output_is_bounded() {
+        let settings = ToneMapSettings {
+            exposure_stops: 10.,
+            operator: Operator::Clamp { clamp: 1. },
+            apply_to: ApplyTo::Luminance,
+        };
+        let color = tonemap_one(Vec3::new(100., -5., 0.), true, settings);
+        assert!(color.cmpge(Vec3::ZERO).all() && color.cmple(Vec3::ONE).all());
+    }
+}

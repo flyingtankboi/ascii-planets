@@ -88,3 +88,100 @@ fn diffuse(n_dot_l: f32, model: DiffuseModel) -> f32 {
         DiffuseModel::HalfLambert => (n_dot_l * 0.5 + 0.5).powi(2),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use glam::Quat;
+    use scene::camera::{Camera, CameraType};
+    use scene::geometry::Pose;
+    use scene::planet::Planet;
+    use std::f32::consts::{FRAC_PI_2, PI};
+
+    const EPSILON: f32 = 1e-5;
+
+    fn assert_vec3_approx_eq(actual: Vec3, expected: Vec3) {
+        assert!(
+            (actual - expected).length() < EPSILON,
+            "expected {:?}, got {:?}",
+            expected,
+            actual
+        );
+    }
+
+    fn light(light_type: LightType, orientation: Quat, color: Vec3) -> Light {
+        Light {
+            pose: Pose::new(Vec3::ZERO, orientation),
+            light_type,
+            color,
+        }
+    }
+
+    /// Hit on the front of a unit planet at z = 5, facing the camera at the origin
+    fn front_hit(planet: &Planet) -> Hit<'_> {
+        Hit {
+            distance: 4.,
+            point: Vec3::new(0., 0., 4.),
+            normal: Vec3::NEG_Z,
+            planet,
+        }
+    }
+
+    #[test]
+    fn test_diffuse_models() {
+        assert_eq!(diffuse(1., DiffuseModel::Lambert), 1.);
+        assert_eq!(diffuse(-1., DiffuseModel::Lambert), 0.);
+        assert_eq!(diffuse(1., DiffuseModel::HalfLambert), 1.);
+        assert_eq!(diffuse(0., DiffuseModel::HalfLambert), 0.25);
+        assert_eq!(diffuse(-1., DiffuseModel::HalfLambert), 0.);
+    }
+
+    #[test]
+    fn test_ambient_light() {
+        let planet = Planet::from_geometry(Vec3::new(0., 0., 5.), 1.);
+        let ambient = light(LightType::AmbientLight, Quat::IDENTITY, Vec3::splat(0.3));
+        let color = shade_hit(&front_hit(&planet), &[ambient], &ShadeSettings::default());
+        assert_vec3_approx_eq(color, Vec3::splat(0.3));
+    }
+
+    #[test]
+    fn test_directional_light_facing() {
+        let planet = Planet::from_geometry(Vec3::new(0., 0., 5.), 1.);
+        let hit = front_hit(&planet);
+        let settings = ShadeSettings::default();
+
+        // Shining +Z from behind the camera lights the front fully
+        let front = light(LightType::DirectionalLight, Quat::IDENTITY, Vec3::ONE);
+        assert_vec3_approx_eq(shade_hit(&hit, &[front], &settings), Vec3::ONE);
+
+        // Shining -Z lights the back, so the front is dark
+        let back = light(
+            LightType::DirectionalLight,
+            Quat::from_rotation_y(PI),
+            Vec3::ONE,
+        );
+        assert_vec3_approx_eq(shade_hit(&hit, &[back], &settings), Vec3::ZERO);
+
+        // Contributions add up
+        assert_vec3_approx_eq(shade_hit(&hit, &[front, front], &settings), Vec3::splat(2.));
+    }
+
+    #[test]
+    fn test_shade_hit_and_miss() {
+        let scene = Scene {
+            planets: vec![Planet::from_geometry(Vec3::new(0., 0., 5.), 1.)],
+            lights: vec![light(LightType::AmbientLight, Quat::IDENTITY, Vec3::ONE)],
+            camera: Camera {
+                pose: Pose::default(),
+                camera_type: CameraType::Perspective {
+                    fov_radian: FRAC_PI_2,
+                },
+            },
+        };
+        let grid = shade(&scene, 9, 5, &ShadeSettings::default());
+
+        assert_eq!((grid.width, grid.height), (9, 5));
+        assert!(grid[(4, 2)].hit);
+        assert_eq!(grid[(0, 0)], ShadeFragment::default());
+    }
+}

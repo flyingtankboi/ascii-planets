@@ -146,3 +146,53 @@ impl<T> IndexMut<(usize, usize)> for Grid<T> {
         &mut self.cells[idx]
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_index_of_and_bounds() {
+        let grid = Grid::new(3, 2, 0);
+        assert_eq!(grid.index_of(2, 1), Some(5));
+        assert_eq!(grid.index_of(3, 0), None);
+        assert_eq!(grid.index_of(0, 2), None);
+    }
+
+    #[test]
+    fn test_new_with_is_row_major() {
+        let grid = Grid::new_with(3, 2, |x, y| (x, y));
+        assert_eq!(grid.cells[4], (1, 1));
+        assert!(grid.iter().all(|(x, y, &cell)| cell == (x, y)));
+    }
+
+    #[test]
+    fn test_index_mut_writes_correct_cell() {
+        let mut grid = Grid::new(3, 2, 0);
+        grid[(1, 1)] = 7;
+        assert_eq!(grid.cells[4], 7);
+        assert_eq!(grid.get(1, 1), Some(&7));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_index_out_of_bounds_panics() {
+        let grid = Grid::new(3, 2, 0);
+        let _ = grid[(3, 0)];
+    }
+
+    #[test]
+    fn test_map_keeps_dimensions() {
+        let grid = Grid::new_with(3, 2, |x, y| x + y);
+        let mapped = grid.map_indexed(|(x, y, v)| x * 10 + y + v);
+        assert_eq!((mapped.width, mapped.height), (3, 2));
+        assert_eq!(mapped[(2, 1)], 24);
+    }
+
+    #[test]
+    fn test_from_iter_with_dims_checks_length() {
+        assert!(Grid::from_iter_with_dims(0..6, 3, 2).is_some());
+        assert!(Grid::from_iter_with_dims(0..5, 3, 2).is_none());
+        assert!(Grid::vec_to_grid(vec![0; 5], 3, 2).is_none());
+    }
+}

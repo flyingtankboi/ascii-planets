@@ -218,4 +218,36 @@ mod test {
         // Ray::at projects along direction
         assert_vec3_approx_eq(ray_tl.at(3.0), ray_tl.origin + ray_tl.direction * 3.0);
     }
+
+    #[test]
+    fn test_from_camera_dimensions_and_symmetry() {
+        let cam = Camera {
+            pose: Pose::default(),
+            camera_type: Perspective {
+                fov_radian: FRAC_PI_2,
+            },
+        };
+        let rays = Ray::from_camera(&cam, 4, 2);
+        assert_eq!((rays.width, rays.height), (4, 2));
+
+        // Left/right and top/bottom rays mirror each other
+        let tl = rays[(0, 0)].direction;
+        let tr = rays[(3, 0)].direction;
+        let bl = rays[(0, 1)].direction;
+        assert_vec3_approx_eq(tr, Vec3::new(-tl.x, tl.y, tl.z));
+        assert_vec3_approx_eq(bl, Vec3::new(tl.x, -tl.y, tl.z));
+    }
+
+    #[test]
+    fn test_rotated_camera() {
+        // Rotating 90° around Y turns forward from +Z to +X
+        let cam = Camera {
+            pose: Pose::new(Vec3::ZERO, glam::Quat::from_rotation_y(FRAC_PI_2)),
+            camera_type: Perspective {
+                fov_radian: FRAC_PI_2,
+            },
+        };
+        let center = Ray::from_camera_at_point(&cam, 1, 1, 3, 3).unwrap();
+        assert_vec3_approx_eq(center.direction, Vec3::X);
+    }
 }

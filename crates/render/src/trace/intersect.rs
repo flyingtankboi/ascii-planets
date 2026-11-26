@@ -169,4 +169,15 @@ mod tests {
         assert!((hit.distance - 4.0).abs() < EPSILON);
         assert_vec3_approx_eq(hit.point, Vec3::new(0.0, 0.0, 4.0));
     }
+
+    #[test]
+    fn test_tangent_ray_grazes_planet() {
+        // Ray at x = 1 just touches the sphere of radius 1 (discriminant = 0)
+        let ray = Ray::new(Vec3::new(1.0, 0.0, 0.0), Vec3::Z);
+        let planets = [Planet::from_geometry(Vec3::new(0.0, 0.0, 5.0), 1.0)];
+
+        let hit = intersect_planets(&ray, &planets).expect("expected tangent hit");
+
+        assert_vec3_approx_eq(hit.point, Vec3::new(1.0, 0.0, 5.0));
+    }
 }

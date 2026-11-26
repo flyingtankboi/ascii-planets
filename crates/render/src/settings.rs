@@ -82,3 +82,29 @@ impl GlyphRampChoice {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ramps_start_dark_without_duplicates() {
+        let choices = [
+            GlyphRampChoice::Short,
+            GlyphRampChoice::Blocks,
+            GlyphRampChoice::Minimal,
+            GlyphRampChoice::Round,
+            GlyphRampChoice::Dots,
+            GlyphRampChoice::Medium,
+            GlyphRampChoice::Long,
+        ];
+        for choice in choices {
+            let chars = choice.chars();
+            assert_eq!(chars[0], ' ', "{:?}", choice);
+            let mut unique = chars.to_vec();
+            unique.sort();
+            unique.dedup();
+            assert_eq!(unique.len(), chars.len(), "{:?}", choice);
+        }
+    }
+}

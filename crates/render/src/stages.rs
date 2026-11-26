@@ -1,4 +1,4 @@
-pub(crate) mod map;
-pub(crate) mod quantize;
-pub(crate) mod shading;
-pub(crate) mod tonemap;
+pub mod map;
+pub mod quantize;
+pub mod shading;
+pub mod tonemap;
