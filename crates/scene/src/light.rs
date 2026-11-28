@@ -9,7 +9,8 @@ pub enum LightType {
     DirectionalLight,
     /// Light at a physical point.
     PointLight,
-    /// Light at a physical point with an emitting cone defined by an angle.
+    /// Light at a physical point with an emitting cone along its forward,
+    /// `angle` is the cone's half-angle in radian.
     SpotLight { angle: f32 },
     /// Ambient light coming from everywhere
     AmbientLight,

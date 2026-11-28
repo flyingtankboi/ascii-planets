@@ -17,7 +17,12 @@ pub(crate) struct Hit<'a> {
 }
 
 /// Gives the hit between one ray and one planet, returns None if no hits are found
-fn intersect_with_one(ray: &Ray, planet: &Planet, t_min: f32, t_max: f32) -> Option<Vec3> {
+pub(crate) fn intersect_with_one(
+    ray: &Ray,
+    planet: &Planet,
+    t_min: f32,
+    t_max: f32,
+) -> Option<Vec3> {
     let l = ray.origin - planet.position();
 
     // Using half_b simplifies the quadratic formula by eliminating factors of 2 and 4

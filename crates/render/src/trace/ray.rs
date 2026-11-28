@@ -2,8 +2,6 @@ use glam::Vec3;
 use scene::camera::{Camera, CameraType::Orthogonal, CameraType::Perspective};
 use scene::geometry::HasPose;
 
-use crate::grid::Grid;
-
 /// Ray structure
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Ray {
@@ -28,26 +26,16 @@ impl Ray {
         Ray { origin, direction }
     }
 
-    fn idx(x: usize, y: usize, width: usize, height: usize) -> Option<usize> {
-        (x < width && y < height).then_some(y * width + x)
-    }
-
-    /// Creates a ray from a cell's position and a camera
+    /// Creates a ray through the screen position `(u, v)`, both in `[0, 1]` from the top left.
     /// `cell_aspect` is the height / width ratio of one cell
-    /// If the position is outside of width/height return none
-    pub fn from_camera_at_point(
+    pub fn from_camera_at_uv(
         camera: &Camera,
-        x: usize,
-        y: usize,
+        u: f32,
+        v: f32,
         width: usize,
         height: usize,
         cell_aspect: f32,
-    ) -> Option<Ray> {
-        Ray::idx(x, y, width, height)?;
-
-        let u = (x as f32 + 0.5) / width as f32;
-        let v = (y as f32 + 0.5) / height as f32;
-
+    ) -> Ray {
         let x_screen = 2. * u - 1.;
         let y_screen = 1. - 2. * v; // Flip y so y points up and not down as is the case in image formats
 
@@ -77,26 +65,7 @@ impl Ray {
             }
         };
 
-        Some(Ray::new(origin, direction))
-    }
-
-    /// Get all rays for a camera and for the width/height of the canvas
-    /// `cell_aspect` is the height / width ratio of one cell
-    pub fn from_camera(
-        camera: &Camera,
-        width: usize,
-        height: usize,
-        cell_aspect: f32,
-    ) -> Grid<Ray> {
-        let mut ray_array = Grid::new_default(width, height);
-        for y in 0..height {
-            for x in 0..width {
-                ray_array[(x, y)] =
-                    Ray::from_camera_at_point(camera, x, y, width, height, cell_aspect)
-                        .unwrap_or_default();
-            }
-        }
-        ray_array
+        Ray::new(origin, direction)
     }
 
     /// Get position of ray projected at distance t
@@ -108,6 +77,7 @@ impl Ray {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::grid::Grid;
     use scene::geometry::Pose;
     use std::f32::consts::{FRAC_PI_2, FRAC_PI_4};
 
@@ -120,6 +90,18 @@ mod test {
             expected,
             actual
         );
+    }
+
+    /// Ray through the center of cell `(x, y)` with 2:1 cells
+    fn center_ray(cam: &Camera, x: usize, y: usize, width: usize, height: usize) -> Ray {
+        let u = (x as f32 + 0.5) / width as f32;
+        let v = (y as f32 + 0.5) / height as f32;
+        Ray::from_camera_at_uv(cam, u, v, width, height, 2.)
+    }
+
+    /// Rays through the center of every cell
+    fn center_rays(cam: &Camera, width: usize, height: usize) -> Grid<Ray> {
+        Grid::new_with(width, height, |x, y| center_ray(cam, x, y, width, height))
     }
 
     fn print_rays(rays: &Grid<Ray>, width: usize, height: usize) {
@@ -174,7 +156,7 @@ mod test {
 
         for camera_type in camera_types {
             let cam = Camera::new(camera_type);
-            let rays = Ray::from_camera(&cam, width, height, 2.);
+            let rays = center_rays(&cam, width, height);
             print_rays(&rays, width, height);
         }
     }
@@ -185,16 +167,13 @@ mod test {
             fov_radian: FRAC_PI_2,
         });
 
-        // Out-of-bounds returns None
-        assert!(Ray::from_camera_at_point(&cam, 3, 0, 3, 3, 2.).is_none());
-
         // Center cell (1, 1) on a 3x3 grid shoots straight forward
-        let center = Ray::from_camera_at_point(&cam, 1, 1, 3, 3, 2.).unwrap();
+        let center = center_ray(&cam, 1, 1, 3, 3);
         assert_vec3_approx_eq(center.origin, cam.pose.position);
         assert_vec3_approx_eq(center.direction, cam.forward().normalize());
 
         // Corner math on 4x2 grid with 2:1 cells (effective height = 4, aspect_ratio = 1.0, scale = 1.0)
-        let top_left = Ray::from_camera_at_point(&cam, 0, 0, 4, 2, 2.).unwrap();
+        let top_left = center_ray(&cam, 0, 0, 4, 2);
         let expected_dir = (cam.forward() + cam.right() * -0.75 + cam.up() * 0.50).normalize();
         assert_vec3_approx_eq(top_left.direction, expected_dir);
     }
@@ -204,8 +183,8 @@ mod test {
         let cam = Camera::new(Orthogonal { ortho_height: 4.0 });
 
         // Orthogonal rays are parallel with shifted origins
-        let ray_tl = Ray::from_camera_at_point(&cam, 0, 0, 4, 2, 2.).unwrap();
-        let ray_br = Ray::from_camera_at_point(&cam, 3, 1, 4, 2, 2.).unwrap();
+        let ray_tl = center_ray(&cam, 0, 0, 4, 2);
+        let ray_br = center_ray(&cam, 3, 1, 4, 2);
 
         assert_vec3_approx_eq(ray_tl.direction, cam.forward().normalize());
         assert_vec3_approx_eq(ray_br.direction, cam.forward().normalize());
@@ -223,7 +202,7 @@ mod test {
         let cam = Camera::new(Perspective {
             fov_radian: FRAC_PI_2,
         });
-        let rays = Ray::from_camera(&cam, 4, 2, 2.);
+        let rays = center_rays(&cam, 4, 2);
         assert_eq!((rays.width, rays.height), (4, 2));
 
         // Left/right and top/bottom rays mirror each other
@@ -243,7 +222,7 @@ mod test {
                 fov_radian: FRAC_PI_2,
             },
         );
-        let center = Ray::from_camera_at_point(&cam, 1, 1, 3, 3, 2.).unwrap();
+        let center = center_ray(&cam, 1, 1, 3, 3);
         assert_vec3_approx_eq(center.direction, Vec3::X);
     }
 }

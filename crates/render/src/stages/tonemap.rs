@@ -78,7 +78,8 @@ pub(crate) fn tonemap(
     settings: &ToneMapSettings,
 ) -> Grid<ToneFragment> {
     shade_grid.map(|shade| {
-        let mut color = if shade.hit { shade.color } else { Vec3::ZERO };
+        // Misses add no color to a cell's mean, so partially covered edges are already dimmer
+        let mut color = shade.color;
         // Exposure
         color *= settings.exposure_stops.exp2();
         // Operator
@@ -128,8 +129,8 @@ mod tests {
         );
     }
 
-    fn tonemap_one(color: Vec3, hit: bool, settings: ToneMapSettings) -> Vec3 {
-        let grid = Grid::new(1, 1, ShadeFragment { hit, color });
+    fn tonemap_one(color: Vec3, settings: ToneMapSettings) -> Vec3 {
+        let grid = Grid::new(1, 1, ShadeFragment { hit: 1., color });
         tonemap(grid, &settings)[(0, 0)].color
     }
 
@@ -167,19 +168,13 @@ mod tests {
     }
 
     #[test]
-    fn test_miss_is_black() {
-        let color = tonemap_one(Vec3::ONE, false, ToneMapSettings::default());
-        assert_eq!(color, Vec3::ZERO);
-    }
-
-    #[test]
     fn test_exposure_doubles_per_stop() {
         let settings = ToneMapSettings {
             exposure_stops: 1.,
             operator: Operator::Clamp { clamp: 10. },
             apply_to: ApplyTo::PerChannel,
         };
-        let color = tonemap_one(Vec3::splat(1.), true, settings);
+        let color = tonemap_one(Vec3::splat(1.), settings);
         assert_vec3_approx_eq(color, Vec3::splat(0.2));
     }
 
@@ -190,7 +185,7 @@ mod tests {
             operator: Operator::Clamp { clamp: 1. },
             apply_to: ApplyTo::Luminance,
         };
-        let color = tonemap_one(Vec3::new(100., -5., 0.), true, settings);
+        let color = tonemap_one(Vec3::new(100., -5., 0.), settings);
         assert!(color.cmpge(Vec3::ZERO).all() && color.cmple(Vec3::ONE).all());
     }
 }

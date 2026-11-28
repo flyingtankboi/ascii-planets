@@ -56,7 +56,7 @@ impl Input {
     /// Waits for and reads every event until `deadline`, then gives what was asked this frame
     pub fn read_until(&mut self, deadline: Instant) -> io::Result<FrameInput> {
         let mut frame = FrameInput::default();
-        loop{
+        loop {
             let time_left = deadline.saturating_duration_since(Instant::now());
             if !event::poll(time_left)? {
                 break;
@@ -72,18 +72,22 @@ impl Input {
     /// Updates the held keys and the frame's actions from one event
     fn handle_event(&mut self, event: Event, frame: &mut FrameInput) {
         match event {
-            Event::Key(key) => {match key.kind {
-                KeyEventKind::Press   => {
+            Event::Key(key) => match key.kind {
+                KeyEventKind::Press => {
                     match key.code {
                         KeyCode::Tab => frame.next_target = true,
                         KeyCode::Char('q') => frame.should_quit = true,
                         _ => (),
                     };
                     self.held.insert(key.code, Instant::now());
-                },
-                KeyEventKind::Repeat  => {self.held.insert(key.code, Instant::now());},
-                KeyEventKind::Release => {self.held.remove(&key.code);},
-            }},
+                }
+                KeyEventKind::Repeat => {
+                    self.held.insert(key.code, Instant::now());
+                }
+                KeyEventKind::Release => {
+                    self.held.remove(&key.code);
+                }
+            },
             Event::FocusLost => self.held.clear(),
             _ => (),
         };
@@ -94,7 +98,9 @@ impl Input {
         if self.reports_release {
             self.held.contains_key(&key)
         } else {
-            self.held.get(&key).is_some_and(|&instant| (instant.elapsed()) < HOLD_DURATION)
+            self.held
+                .get(&key)
+                .is_some_and(|&instant| (instant.elapsed()) < HOLD_DURATION)
         }
     }
 
