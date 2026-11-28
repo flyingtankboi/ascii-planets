@@ -2,14 +2,16 @@
 use clap::Parser;
 use crossterm::event::{self, KeyCode};
 use ratatui::{DefaultTerminal, Frame};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use render::settings::Settings;
 use scene::Scene;
 
 use crate::demo::DemoOption;
 use crate::scene_widget::SceneWidget;
+use crate::input::Input;
 
+mod input;
 mod demo;
 mod scene_widget;
 
@@ -27,18 +29,28 @@ struct Args {
 /// Main call to run the ratatui app.
 fn main() -> Result<()> {
     let args = Args::parse();
-    let (scene, settings) = args.demo.fetch();
-    ratatui::run(|terminal| run(terminal, &scene, &settings))
+    let (mut scene, settings) = args.demo.build();
+    ratatui::run(|terminal| run(terminal, &mut scene, &settings))
 }
 
 /// Run the application loop.
 /// Exits when the user presses 'q'.
-fn run(terminal: &mut DefaultTerminal, scene: &Scene, settings: &Settings) -> Result<()> {
+fn run(terminal: &mut DefaultTerminal, scene: &mut Scene, settings: &Settings) -> Result<()> {
+    let fps = 30;
+    let mut input = Input::new()?;
+    let frame_time = Duration::from_secs_f32(1. / fps as f32);
+    let mut last = Instant::now();
     loop {
-        terminal.draw(|frame| render(frame, scene, settings))?;
-        if should_quit()? {
-            break;
-        }
+        let now = Instant::now();
+        let dt = (now - last).as_secs_f32() * 1000.;
+        last = now;
+
+        let frame = input.read_until(now + frame_time)?;
+        if frame.should_quit { break; }
+        if frame.next_target { scene.next_camera_target(); }
+        scene.step(dt, &frame.direction);
+
+        terminal.draw(|f| render(f, scene, settings))?;
     }
     Ok(())
 }
@@ -46,15 +58,4 @@ fn run(terminal: &mut DefaultTerminal, scene: &Scene, settings: &Settings) -> Re
 /// Render the application
 fn render(frame: &mut Frame, scene: &Scene, settings: &Settings) {
     frame.render_widget(SceneWidget { scene, settings }, frame.area());
-}
-
-/// Check if the user has pressed 'q' every 250ms.
-fn should_quit() -> Result<bool> {
-    if event::poll(Duration::from_millis(250))? {
-        let q_pressed = event::read()?
-            .as_key_press_event()
-            .is_some_and(|key| key.code == KeyCode::Char('q'));
-        return Ok(q_pressed);
-    }
-    Ok(false)
 }

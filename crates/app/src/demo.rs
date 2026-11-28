@@ -19,13 +19,15 @@ use scene::planet::Planet;
 /// Enum to store the different demos
 #[derive(Clone, ValueEnum)]
 pub enum DemoOption {
+    /// Simple planet
     Simple,
+    /// Three planets with colored lights
     Color,
 }
 
 impl DemoOption {
     /// Gives the corresponding demo scene and settings
-    pub fn fetch(&self) -> (Scene, Settings) {
+    pub fn build(&self) -> (Scene, Settings) {
         let scene = match self {
             DemoOption::Simple => demo_scene(),
             DemoOption::Color => demo_color_scene(),
@@ -47,7 +49,7 @@ pub fn terminal_cell_aspect() -> Option<f32> {
 }
 
 /// Simple demo scene: one planet lit from the top left, with a dim ambient light.
-pub fn demo_scene() -> Scene {
+fn demo_scene() -> Scene {
     let sun_direction = Vec3::new(1., -0.5, 1.).normalize();
     Scene {
         planets: vec![Planet::from_geometry(Vec3::new(0., 0., 5.), 2.)],
@@ -63,18 +65,15 @@ pub fn demo_scene() -> Scene {
                 color: Vec3::new(0., 0.1, 0.1),
             },
         ],
-        camera: Camera {
-            pose: Pose::default(),
-            camera_type: CameraType::Perspective {
-                fov_radian: FRAC_PI_3,
-            },
-        },
+        camera: Camera::new(CameraType::Perspective {
+            fov_radian: FRAC_PI_3,
+        }),
     }
 }
 
-/// Temporary complex demo scene: a gas giant with two moons, lit by a warm sun from the
+/// Temporary complex demo scene: three planets, lit by a warm sun from the
 /// front left, a cyan rim light from behind and a magenta glow from below.
-pub fn demo_color_scene() -> Scene {
+fn demo_color_scene() -> Scene {
     // Directional light travelling along `direction`
     let directional = |direction: Vec3, color: Vec3| Light {
         pose: Pose::new(
@@ -104,17 +103,14 @@ pub fn demo_color_scene() -> Scene {
                 color: Vec3::new(0.02, 0.01, 0.04),
             },
         ],
-        camera: Camera {
-            pose: Pose::default(),
-            camera_type: CameraType::Perspective {
-                fov_radian: FRAC_PI_3,
-            },
-        },
+        camera: Camera::new(CameraType::Perspective {
+            fov_radian: FRAC_PI_3,
+        }),
     }
 }
 
 /// Demo settings for all the demos
-pub fn demo_settings() -> Settings {
+fn demo_settings() -> Settings {
     Settings {
         shade_settings: ShadeSettings {
             diffuse: DiffuseModel::Lambert,

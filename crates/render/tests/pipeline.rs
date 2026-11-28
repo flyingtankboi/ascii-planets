@@ -29,12 +29,12 @@ fn settings() -> Settings {
 }
 
 fn camera(orientation: Quat) -> Camera {
-    Camera {
-        pose: Pose::new(Vec3::ZERO, orientation),
-        camera_type: CameraType::Perspective {
+    Camera::with_pose(
+        Pose::new(Vec3::ZERO, orientation),
+        CameraType::Perspective {
             fov_radian: FRAC_PI_2,
         },
-    }
+    )
 }
 
 fn light(light_type: LightType, orientation: Quat) -> Light {

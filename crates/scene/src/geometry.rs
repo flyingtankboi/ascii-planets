@@ -36,12 +36,18 @@ impl Pose {
 pub trait HasPose {
     fn pose(&self) -> &Pose;
 
+    fn pose_mut(&mut self) -> &mut Pose;
+
     fn position(&self) -> Vec3 {
         self.pose().position
     }
 
     fn orientation(&self) -> Quat {
         self.pose().orientation
+    }
+
+    fn set_orientation(&mut self, orientation: Quat) {
+        self.pose_mut().orientation = orientation;
     }
 
     fn distance(&self, other: &impl HasPose) -> f32 {

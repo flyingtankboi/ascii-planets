@@ -173,10 +173,7 @@ mod test {
         ];
 
         for camera_type in camera_types {
-            let cam = Camera {
-                pose: Pose::default(),
-                camera_type,
-            };
+            let cam = Camera::new(camera_type);
             let rays = Ray::from_camera(&cam, width, height, 2.);
             print_rays(&rays, width, height);
         }
@@ -184,12 +181,9 @@ mod test {
 
     #[test]
     fn test_perspective_rays() {
-        let cam = Camera {
-            pose: Pose::default(),
-            camera_type: Perspective {
-                fov_radian: FRAC_PI_2,
-            },
-        };
+        let cam = Camera::new(Perspective {
+            fov_radian: FRAC_PI_2,
+        });
 
         // Out-of-bounds returns None
         assert!(Ray::from_camera_at_point(&cam, 3, 0, 3, 3, 2.).is_none());
@@ -207,10 +201,7 @@ mod test {
 
     #[test]
     fn test_orthogonal_rays_and_at() {
-        let cam = Camera {
-            pose: Pose::default(),
-            camera_type: Orthogonal { ortho_height: 4.0 },
-        };
+        let cam = Camera::new(Orthogonal { ortho_height: 4.0 });
 
         // Orthogonal rays are parallel with shifted origins
         let ray_tl = Ray::from_camera_at_point(&cam, 0, 0, 4, 2, 2.).unwrap();
@@ -229,12 +220,9 @@ mod test {
 
     #[test]
     fn test_from_camera_dimensions_and_symmetry() {
-        let cam = Camera {
-            pose: Pose::default(),
-            camera_type: Perspective {
-                fov_radian: FRAC_PI_2,
-            },
-        };
+        let cam = Camera::new(Perspective {
+            fov_radian: FRAC_PI_2,
+        });
         let rays = Ray::from_camera(&cam, 4, 2, 2.);
         assert_eq!((rays.width, rays.height), (4, 2));
 
@@ -249,12 +237,12 @@ mod test {
     #[test]
     fn test_rotated_camera() {
         // Rotating 90° around Y turns forward from +Z to +X
-        let cam = Camera {
-            pose: Pose::new(Vec3::ZERO, glam::Quat::from_rotation_y(FRAC_PI_2)),
-            camera_type: Perspective {
+        let cam = Camera::with_pose(
+            Pose::new(Vec3::ZERO, glam::Quat::from_rotation_y(FRAC_PI_2)),
+            Perspective {
                 fov_radian: FRAC_PI_2,
             },
-        };
+        );
         let center = Ray::from_camera_at_point(&cam, 1, 1, 3, 3, 2.).unwrap();
         assert_vec3_approx_eq(center.direction, Vec3::X);
     }

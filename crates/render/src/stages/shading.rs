@@ -182,12 +182,9 @@ mod tests {
         let scene = Scene {
             planets: vec![Planet::from_geometry(Vec3::new(0., 0., 5.), 1.)],
             lights: vec![light(LightType::AmbientLight, Quat::IDENTITY, Vec3::ONE)],
-            camera: Camera {
-                pose: Pose::default(),
-                camera_type: CameraType::Perspective {
-                    fov_radian: FRAC_PI_2,
-                },
-            },
+            camera: Camera::new(CameraType::Perspective {
+                fov_radian: FRAC_PI_2,
+            }),
         };
         let grid = shade(&scene, 9, 5, &ShadeSettings::default());
 

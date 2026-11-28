@@ -31,4 +31,7 @@ impl HasPose for Light {
     fn pose(&self) -> &Pose {
         &self.pose
     }
+    fn pose_mut(&mut self) -> &mut Pose {
+        &mut self.pose
+    }
 }
